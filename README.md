@@ -28,6 +28,7 @@ agents, contrôle qualité automatique, circuit de validation, tableau de bord, 
 12. [Limites connues](#12-limites-connues)
 
 Le scénario de démonstration pas à pas est dans [`docs/SCENARIO_DEMO.md`](docs/SCENARIO_DEMO.md).
+**Windows, sans ligne de commande : [`docs/WINDOWS.md`](docs/WINDOWS.md) (double-clic sur `demarrer.bat`).**
 Mise en ligne gratuite (Vercel + Neon, depuis le navigateur) : [`docs/DEPLOIEMENT.md`](docs/DEPLOIEMENT.md).
 Présentation PowerPoint : [`docs/Registre-Collecte-presentation.pptx`](docs/Registre-Collecte-presentation.pptx).
 
