@@ -1,21 +1,37 @@
-// Vérifie la configuration avant la mise en ligne (message explicite plutôt qu'une erreur technique)
+// Vérifie la configuration avant la mise en ligne : messages explicites plutôt qu'erreurs techniques.
+// N'affiche jamais le mot de passe.
+import { lookup } from "node:dns/promises";
+
+const fail = (msg) => {
+  console.error(`\n✖ ${msg}\n`);
+  process.exit(1);
+};
+
 const url = process.env.DIRECT_URL || process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL;
-if (url && !process.env.DATABASE_URL) {
-  console.error("\n✖ DATABASE_URL est absente (seule une connexion directe est définie). Ajoutez DATABASE_URL.\n");
-  process.exit(1);
+if (!process.env.DATABASE_URL) {
+  fail("La variable DATABASE_URL est absente. Vercel : Settings → Environment Variables → ajoutez DATABASE_URL (adresse complète copiée depuis Neon → Connect → Copy snippet), cochez « Production », Save, puis Redeploy.");
 }
-if (!url) {
-  console.error("\n✖ La variable d'environnement DATABASE_URL est absente.");
-  console.error("  Vercel : Settings → Environment Variables → ajoutez DATABASE_URL (chaîne de connexion Neon),");
-  console.error("  cochez l'environnement « Production », enregistrez, puis Deployments → … → Redeploy.\n");
-  process.exit(1);
+const raw = url;
+if (raw !== raw.trim() || /^["']/.test(raw)) fail("DATABASE_URL contient des espaces ou des guillemets en trop : collez l'adresse seule.");
+if (!/^postgres(ql)?:\/\//.test(raw)) fail("DATABASE_URL doit commencer par postgresql:// (copiez l'onglet « Connection string » dans Neon → Connect).");
+
+let u;
+try {
+  u = new URL(raw);
+} catch {
+  fail("DATABASE_URL n'est pas une adresse valide : recopiez-la avec le bouton « Copy snippet » de Neon.");
 }
-if (!/^postgres(ql)?:\/\//.test(url.trim())) {
-  console.error("\n✖ DATABASE_URL doit commencer par postgresql:// (copiez la chaîne complète depuis Neon → Connect).\n");
-  process.exit(1);
+const host = u.hostname;
+console.log(`Base : utilisateur « ${decodeURIComponent(u.username)} », serveur « ${host} », base « ${u.pathname.slice(1)} »`);
+if (!u.password || /^\*+$/.test(decodeURIComponent(u.password))) {
+  fail("Le mot de passe est absent ou masqué (****) dans DATABASE_URL. Dans Neon → Connect, utilisez « Copy snippet » (ou « Show password ») pour copier l'adresse avec le vrai mot de passe.");
 }
-if (url !== url.trim() || /^["']/.test(url)) {
-  console.error("\n✖ DATABASE_URL contient des espaces ou des guillemets en trop : collez la chaîne seule.\n");
-  process.exit(1);
+if (/\.\.|\*|…|xxx/i.test(host) || host.startsWith("ep-.")) {
+  fail(`L'adresse du serveur « ${host} » est un exemple, pas votre vraie base. Dans Neon → Connect → onglet « Connection string » → « Copy snippet », puis remplacez la valeur de DATABASE_URL dans Vercel.`);
 }
-console.log("✓ Configuration de la base détectée.");
+try {
+  await lookup(host);
+} catch {
+  fail(`Le serveur « ${host} » est introuvable. Vérifiez que l'adresse a été copiée en entier depuis Neon (Connect → Copy snippet).`);
+}
+console.log("✓ Configuration de la base détectée et serveur joignable.");
