@@ -19,6 +19,7 @@ const FIELD_TYPES = Object.keys(FIELD_TYPE_LABELS) as FieldType[];
 const OP_LABELS: Record<ComparisonOperator, string> = { "<": "est inférieur à", "<=": "est inférieur ou égal à", ">": "est supérieur à", ">=": "est supérieur ou égal à", "=": "est égal à", "!=": "est différent de" };
 const hasOptions = (t: FieldType) => t === "LISTE" || t === "CHOIX_UNIQUE" || t === "CHOIX_MULTIPLE";
 
+// identifiants stables pour les éléments initiaux (identiques serveur/navigateur) ; uid() seulement pour les ajouts
 let counter = 0;
 const uid = () => `u${Date.now().toString(36)}${(counter++).toString(36)}`;
 
@@ -47,9 +48,9 @@ export function FormBuilder({ formId, versionNumber, initial }: Props) {
   const [title, setTitle] = useState(initial.title);
   const [description, setDescription] = useState(initial.description ?? "");
   const [fields, setFields] = useState<DraftField[]>(() =>
-    initial.fields.map((f) => ({ ...f, uid: uid(), keyEdited: true, options: f.options ?? [], validation: f.validation ?? {} })),
+    initial.fields.map((f, i) => ({ ...f, uid: `f${i}`, keyEdited: true, options: f.options ?? [], validation: f.validation ?? {} })),
   );
-  const [rules, setRules] = useState<DraftRule[]>(() => initial.rules.map((r) => ({ ...r, uid: uid() })));
+  const [rules, setRules] = useState<DraftRule[]>(() => initial.rules.map((r, i) => ({ ...r, uid: `r${i}` })));
   const [dupKeys, setDupKeys] = useState<string[]>(initial.duplicateFieldKeys);
   const [errors, setErrors] = useState<Record<string, string[]>>({});
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
