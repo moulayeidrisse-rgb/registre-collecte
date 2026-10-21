@@ -49,7 +49,10 @@ export function SubmissionForm({ fields, rules, initialValues = {}, mode, allowD
     setValues((s) => ({ ...s, [key]: v }));
     setServerResult(null);
   };
-  const touch = (key: string) => setTouched((t) => ({ ...t, [key]: true }));
+  const touch = (key: string) => setTouched((t) => (t[key] ? t : { ...t, [key]: true }));
+  // Au départ d'un champ, l'erreur s'affiche avec un léger délai : sinon le message qui apparaît
+  // décale la page pendant le clic en cours (bouton, case à cocher) et le clic est perdu.
+  const touchLater = (key: string) => window.setTimeout(() => touch(key), 250);
 
   const visibleIssues = (key: string) => (showAll || touched[key] ? byField[key] ?? [] : []);
 
@@ -127,13 +130,13 @@ export function SubmissionForm({ fields, rules, initialValues = {}, mode, allowD
         const invalid = errMsgs.length > 0;
         const id = `champ-${f.key}`;
         const describedBy = [f.helpText ? `${id}-aide` : "", invalid ? `${id}-err` : "", warnMsgs.length ? `${id}-warn` : ""].filter(Boolean).join(" ") || undefined;
-        const common = { id, "aria-invalid": invalid, "aria-describedby": describedBy, onBlur: () => touch(f.key) };
+        const common = { id, "aria-invalid": invalid, "aria-describedby": describedBy, onBlur: () => touchLater(f.key) };
         const v = values[f.key];
 
         return (
           <div key={f.key} className="scroll-mt-24">
             {["CHOIX_UNIQUE", "CHOIX_MULTIPLE", "OUI_NON"].includes(f.type) ? (
-              <fieldset aria-describedby={describedBy} aria-invalid={invalid} id={id} tabIndex={-1} onBlur={() => touch(f.key)}>
+              <fieldset aria-describedby={describedBy} aria-invalid={invalid} id={id} tabIndex={-1} onBlur={() => touchLater(f.key)}>
                 <legend className="mb-1 block text-sm font-medium text-ink">
                   <span className="mr-1 text-muted">{idx + 1}.</span>{f.label}
                   {f.required && <span className="ml-0.5 text-red-700" aria-hidden> *</span>}

@@ -1,0 +1,3 @@
+﻿Référence;Statut;Version;Agent;Créée le;Soumise le;Traitée par;Complétude (%);Anomalies;Nom du site [nom_du_site];Date de relevé [date_de_releve];Nombre de ménages desservis [nombre_de_menages_desservis];Point d'eau fonctionnel [point_d_eau_fonctionnel];Cause de la panne [cause_de_la_panne]
+R-2026-28D19288;Validée;1;Amina Test;2026-10-21T03:43:34.782Z;2026-10-21T03:43:34.778Z;Claire Exemple;100;0;Forage de Village-Test;21/10/2026;120;Non;Pompe en panne
+R-2026-E72D521B;À corriger;1;Amina Test;2026-10-21T03:43:36.641Z;2026-10-21T03:43:36.640Z;Claire Exemple;80;2;forage de village-test;21/10/2026;350;Oui;

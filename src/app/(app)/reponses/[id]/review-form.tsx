@@ -3,9 +3,17 @@
 import { useActionState, useState } from "react";
 import { reviewAction, type ReviewState } from "../actions";
 import { Alert, Button, Label, inputClass } from "@/components/ui";
+import { useToast } from "@/components/toast";
 
 export function ReviewForm({ submissionId, warningCount }: { submissionId: string; warningCount: number }) {
-  const [state, action, pending] = useActionState<ReviewState, FormData>(reviewAction.bind(null, submissionId), null);
+  const toast = useToast();
+  // Après une décision, ce bloc disparaît (la réponse n'est plus « en attente ») :
+  // la confirmation passe donc par une notification, qui reste visible.
+  const [state, action, pending] = useActionState<ReviewState, FormData>(async (prev, fd) => {
+    const r = await reviewAction(submissionId, prev, fd);
+    if (r?.ok && r.message) toast("success", r.message);
+    return r;
+  }, null);
   const [decision, setDecision] = useState("");
   return (
     <form action={action} className="space-y-3 p-5" onSubmit={(e) => {
