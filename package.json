@@ -17,7 +17,7 @@
     "test:integration": "dotenv -e .env.test -- sh -c \"prisma migrate deploy && vitest run --project integration\"",
     "test:e2e": "playwright test",
     "test:all": "npm run test && npm run test:integration && npm run test:e2e",
-    "vercel-build": "prisma migrate deploy && SEED_IF_EMPTY=1 tsx --conditions=react-server prisma/seed.ts && next build"
+    "vercel-build": "node scripts/check-env.mjs && prisma migrate deploy && SEED_IF_EMPTY=1 tsx --conditions=react-server prisma/seed.ts && next build"
   },
   "dependencies": {
     "@fontsource/noto-naskh-arabic": "5.3.0",
