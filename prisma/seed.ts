@@ -33,6 +33,11 @@ const int = (min: number, max: number) => Math.floor(rand() * (max - min + 1)) +
 async function main() {
   const existing = await prisma.user.count();
   if (existing > 0) {
+    // Mode déploiement : la base est déjà initialisée, on ne touche à rien
+    if (process.env.SEED_IF_EMPTY === "1") {
+      console.log(`Base déjà initialisée (${existing} utilisateur(s)) : données de démonstration conservées.`);
+      return;
+    }
     if (process.env.SEED_RESET !== "1") {
       console.error(`La base contient déjà ${existing} utilisateur(s). Seed annulé pour ne rien écraser.`);
       console.error("Pour réinitialiser (DESTRUCTIF) : SEED_RESET=1 npm run db:seed");
