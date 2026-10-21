@@ -46,3 +46,16 @@ body {
     background: white;
   }
 }
+
+/* Arabe : polices système adaptées à l'écriture arabe, interligne plus généreux */
+html[lang="ar"] body {
+  font-family: "Noto Naskh Arabic", "Noto Sans Arabic", "Segoe UI", Tahoma, "Geeza Pro", system-ui, sans-serif;
+  line-height: 1.65;
+}
+/* Les identifiants techniques, références et adresses restent de gauche à droite */
+html[dir="rtl"] input[type="email"],
+html[dir="rtl"] input[type="password"],
+html[dir="rtl"] code {
+  direction: ltr;
+  text-align: right;
+}

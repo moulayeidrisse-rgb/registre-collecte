@@ -43,6 +43,17 @@ Le scénario de démonstration pas à pas est dans [`docs/SCENARIO_DEMO.md`](doc
 | **Consultation et export** | Recherche plein texte (référence, agent, valeurs), filtres par formulaire, statut, période et anomalies ; détail avec historique ; validation / rejet / renvoi pour correction ; export CSV filtré et restreint aux droits ; rapports par formulaire (statistiques par question, imprimables). |
 | **Journal d'audit** | Connexions (réussies, échouées, bloquées), déconnexions, gestion des utilisateurs et formulaires, changements de statut, exports, accès refusés. |
 
+### Langues : français et arabe
+
+L'interface est entièrement disponible en **français** et en **arabe** (bouton « Français / العربية »
+sur la page de connexion, dans la barre supérieure et dans « Mon compte » ; choix mémorisé par cookie).
+En arabe, la mise en page passe **de droite à gauche** et utilise la police libre Noto Naskh Arabic,
+intégrée à l'application (aucun service externe). Menus, pages, boutons, messages d'erreur, de
+validation et de contrôle qualité sont traduits — y compris les anomalies déjà enregistrées en base,
+traduites à l'affichage. Le contenu saisi par les utilisateurs (titres et questions des formulaires,
+réponses, commentaires) reste dans la langue où il a été écrit. Un test unitaire vérifie que chaque
+texte de l'interface possède sa traduction arabe (`src/i18n/ar.ts`).
+
 ### Identité visuelle
 
 Couleurs inspirées du drapeau mauritanien : vert (`#006f3c` à `#00a95c`) pour la navigation et les
@@ -153,9 +164,9 @@ voir la section « Résultats des tests » en bas de ce fichier.
 
 | Suite | Contenu |
 |---|---|
-| Unitaires (59) | moteur de validation (7 types, bornes, formats, règles inter-champs, complétude, doublons), schéma du constructeur, CSV (injection de formules, échappement), matrice des permissions et périmètres, garde-fou : chaque Server Action vérifie la session |
+| Unitaires (65) | moteur de validation (7 types, bornes, formats, règles inter-champs, complétude, doublons), schéma du constructeur, CSV (injection de formules, échappement), matrice des permissions et périmètres, garde-fou : chaque Server Action vérifie la session |
 | Intégration (24) | sur PostgreSQL réel : hachage argon2id, sessions (hachage du jeton, expiration, désactivation), limitation des tentatives, cloisonnement agent / superviseur, validations serveur, persistance typée des valeurs, doublons, circuit de validation et audit, versionnement, indicateurs, export restreint, rapports, protection du dernier administrateur |
-| E2E (17) | redirections d'authentification, cookie `httpOnly`, jeton forgé refusé, redirection ouverte bloquée, accès refusés par URL directe, export interdit (401/403), parcours complet admin → agent → superviseur → indicateurs → export CSV, brouillon, navigation mobile sans débordement |
+| E2E (19) | redirections d'authentification, cookie `httpOnly`, jeton forgé refusé, redirection ouverte bloquée, accès refusés par URL directe, export interdit (401/403), parcours complet admin → agent → superviseur → indicateurs → export CSV, brouillon, navigation mobile sans débordement |
 
 Notes : Playwright utilise le Chromium déjà installé (`PLAYWRIGHT_BROWSERS_PATH`) ; sur une autre
 machine, exécuter une fois `npx playwright install chromium`. Les tests d'intégration et E2E
@@ -281,7 +292,7 @@ Exécution du 21/10/2026 (voir section 7 pour les commandes) :
 |---|---|
 | `npm run lint` | 0 erreur, 0 avertissement |
 | `npm run typecheck` | aucune erreur |
-| `npm run test` | 5 fichiers, **59 tests réussis** |
+| `npm run test` | 6 fichiers, **65 tests réussis** |
 | `npm run test:integration` | 3 fichiers, **24 tests réussis** (PostgreSQL 16, base `registre_test`) |
-| `npm run test:e2e` | **17 tests réussis** (16 ordinateur + 1 mobile, build de production, base `registre_e2e`) |
+| `npm run test:e2e` | **19 tests réussis** (18 ordinateur + 1 mobile, build de production, base `registre_e2e`) |
 | `npm run build` | réussi (26 routes ; pages en rendu partiel, export dynamique) |

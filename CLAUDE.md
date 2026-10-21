@@ -85,6 +85,16 @@ tests/unit|integration|e2e
 12. Ne jamais affirmer qu'un test passe sans l'avoir exécuté. Pas de commande destructive
     (reset de base, suppression de fichiers) sans accord explicite, hors bases de test.
 
+## Langues (FR / AR)
+
+- Tout texte d'interface passe par `t("texte français")` (serveur : `await getT()` de
+  `@/i18n/server` ; client : `useT()` de `@/i18n/client`). Le texte français sert de clé.
+- Ajouter la traduction dans `src/i18n/ar.ts` (le test `tests/unit/i18n.test.ts` échoue sinon).
+- Les messages dynamiques venant du serveur s'affichent via `t.msg(message)` ; les nouveaux
+  messages à variables doivent avoir un motif dans `src/i18n/messages-ar.ts`.
+- Classes Tailwind logiques uniquement (`ps-`, `pe-`, `ms-`, `me-`, `start-`, `end-`, `text-start`,
+  `text-end`, `border-s`) pour que l'arabe (droite à gauche) fonctionne.
+
 ## Conventions
 
 - TypeScript strict ; pas de `any` non justifié.

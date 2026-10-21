@@ -2,6 +2,10 @@ import clsx from "clsx";
 import Link from "next/link";
 import type { ComponentProps, ReactNode } from "react";
 import { AlertTriangle, CheckCircle2, Info, XCircle, Inbox } from "lucide-react";
+import type { TFunction } from "@/i18n/translate";
+
+/** Traduction par défaut (français) pour les composants appelés sans t */
+const fr: TFunction = (k, p) => (p ? k.replace(/\{(\w+)\}/g, (m, x) => (p[x] === undefined || p[x] === null ? m : String(p[x]))) : k);
 
 export function cn(...args: Parameters<typeof clsx>) {
   return clsx(...args);
@@ -54,11 +58,11 @@ export function CardHeader({ title, description, actions, id }: { title: ReactNo
   );
 }
 
-export function PageHeader({ title, description, actions, breadcrumb }: { title: string; description?: ReactNode; actions?: ReactNode; breadcrumb?: { href: string; label: string }[] }) {
+export function PageHeader({ title, description, actions, breadcrumb, t = fr }: { title: string; description?: ReactNode; actions?: ReactNode; breadcrumb?: { href: string; label: string }[]; t?: TFunction }) {
   return (
     <div className="mb-6">
       {breadcrumb && (
-        <nav aria-label="Fil d'Ariane" className="mb-2 text-sm text-muted">
+        <nav aria-label={t("Fil d'Ariane")} className="mb-2 text-sm text-muted">
           {breadcrumb.map((b, i) => (
             <span key={b.href}>
               {i > 0 && <span className="mx-1.5">/</span>}
@@ -141,12 +145,12 @@ export function StatCard({ label, value, hint, tone = "neutral", icon }: { label
 export const inputClass =
   "block w-full rounded-md border border-line bg-white px-3 py-2 text-sm text-ink shadow-sm placeholder:text-slate-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100 aria-[invalid=true]:border-red-500 aria-[invalid=true]:ring-red-100 disabled:bg-surface";
 
-export function Label({ htmlFor, children, required }: { htmlFor?: string; children: ReactNode; required?: boolean }) {
+export function Label({ htmlFor, children, required, requiredText = "(obligatoire)" }: { htmlFor?: string; children: ReactNode; required?: boolean; requiredText?: string }) {
   return (
     <label htmlFor={htmlFor} className="mb-1 block text-sm font-medium text-ink">
       {children}
-      {required && <span className="ml-0.5 text-red-700" aria-hidden> *</span>}
-      {required && <span className="sr-only"> (obligatoire)</span>}
+      {required && <span className="ms-0.5 text-red-700" aria-hidden> *</span>}
+      {required && <span className="sr-only"> {requiredText}</span>}
     </label>
   );
 }
@@ -172,7 +176,7 @@ export function Table({ children, caption }: { children: ReactNode; caption?: st
 }
 
 export function Th({ children, className }: { children?: ReactNode; className?: string }) {
-  return <th scope="col" className={cn("bg-surface px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-muted whitespace-nowrap", className)}>{children}</th>;
+  return <th scope="col" className={cn("bg-surface px-4 py-2.5 text-start text-xs font-semibold uppercase tracking-wide text-muted whitespace-nowrap", className)}>{children}</th>;
 }
 
 export function Td({ children, className }: { children?: ReactNode; className?: string }) {
@@ -186,7 +190,7 @@ export function Skeleton({ className }: { className?: string }) {
 export function PageSkeleton() {
   return (
     <div aria-busy="true" aria-live="polite">
-      <span className="sr-only">Chargement en cours…</span>
+      <span className="sr-only">Chargement en cours… / جارٍ التحميل…</span>
       <Skeleton className="mb-2 h-7 w-64" />
       <Skeleton className="mb-6 h-4 w-96 max-w-full" />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -197,15 +201,15 @@ export function PageSkeleton() {
   );
 }
 
-export function Pagination({ page, pageSize, total, hrefFor }: { page: number; pageSize: number; total: number; hrefFor: (p: number) => string }) {
+export function Pagination({ page, pageSize, total, hrefFor, t = fr }: { page: number; pageSize: number; total: number; hrefFor: (p: number) => string; t?: TFunction }) {
   const pages = Math.max(1, Math.ceil(total / pageSize));
   if (pages <= 1) return null;
   return (
-    <nav aria-label="Pagination" className="flex items-center justify-between gap-3 border-t border-line px-4 py-3 text-sm">
-      <p className="text-muted">Page {page} sur {pages} · {total} élément{total > 1 ? "s" : ""}</p>
+    <nav aria-label={t("Pagination")} className="flex items-center justify-between gap-3 border-t border-line px-4 py-3 text-sm">
+      <p className="text-muted">{t("Page {page} sur {pages} · {total} élément(s)", { page, pages, total })}</p>
       <div className="flex gap-2">
-        {page > 1 ? <ButtonLink variant="secondary" size="sm" href={hrefFor(page - 1)}>Précédente</ButtonLink> : <Button variant="secondary" size="sm" disabled>Précédente</Button>}
-        {page < pages ? <ButtonLink variant="secondary" size="sm" href={hrefFor(page + 1)}>Suivante</ButtonLink> : <Button variant="secondary" size="sm" disabled>Suivante</Button>}
+        {page > 1 ? <ButtonLink variant="secondary" size="sm" href={hrefFor(page - 1)}>{t("Précédente")}</ButtonLink> : <Button variant="secondary" size="sm" disabled>{t("Précédente")}</Button>}
+        {page < pages ? <ButtonLink variant="secondary" size="sm" href={hrefFor(page + 1)}>{t("Suivante")}</ButtonLink> : <Button variant="secondary" size="sm" disabled>{t("Suivante")}</Button>}
       </div>
     </nav>
   );

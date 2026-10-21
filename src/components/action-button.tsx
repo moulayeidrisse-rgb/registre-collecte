@@ -3,6 +3,7 @@
 import { useTransition, type ReactNode } from "react";
 import { Button } from "./ui";
 import { useToast } from "./toast";
+import { useT } from "@/i18n/client";
 
 type Result = { ok: boolean; message?: string } | null | void;
 
@@ -24,6 +25,7 @@ export function ActionButton({
 }) {
   const [pending, start] = useTransition();
   const toast = useToast();
+  const t = useT();
   return (
     <Button
       type="button"
@@ -34,11 +36,11 @@ export function ActionButton({
         if (confirmMessage && !window.confirm(confirmMessage)) return;
         start(async () => {
           const r = await action();
-          if (r && r.message) toast(r.ok ? "success" : "danger", r.message);
+          if (r && r.message) toast(r.ok ? "success" : "danger", t.msg(r.message));
         });
       }}
     >
-      {pending ? pendingLabel ?? "Traitement…" : children}
+      {pending ? pendingLabel ?? t("Traitement…") : children}
     </Button>
   );
 }

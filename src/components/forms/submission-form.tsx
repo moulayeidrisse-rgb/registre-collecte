@@ -7,6 +7,7 @@ import type { FieldDef, RawValue, RawValues, RuleDef, ValidationIssue } from "@/
 import { issuesByField, validateSubmission } from "@/lib/validation/engine";
 import { Alert, Button, Label, cn, inputClass } from "@/components/ui";
 import { useToast } from "@/components/toast";
+import { useT } from "@/i18n/client";
 
 export type SaveResult =
   | { ok: true; message?: string; redirectTo?: string; warnings?: ValidationIssue[] }
@@ -33,6 +34,7 @@ function toRaw(v: unknown): RawValue {
 export function SubmissionForm({ fields, rules, initialValues = {}, mode, allowDraft = true, submitLabel = "Soumettre", onSave }: Props) {
   const router = useRouter();
   const toast = useToast();
+  const t = useT();
   const [values, setValues] = useState<RawValues>(() => Object.fromEntries(fields.map((f) => [f.key, toRaw(initialValues[f.key])])));
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [showAll, setShowAll] = useState(false);
@@ -60,7 +62,7 @@ export function SubmissionForm({ fields, rules, initialValues = {}, mode, allowD
     if (intent === "submit") setShowAll(true);
     if (mode === "preview") {
       setShowAll(true);
-      toast(client.hasBlockingErrors ? "danger" : "success", client.hasBlockingErrors ? "Aperçu : la réponse serait refusée (voir les erreurs)." : "Aperçu : la réponse serait acceptée. Rien n'a été enregistré.");
+      toast(client.hasBlockingErrors ? "danger" : "success", client.hasBlockingErrors ? t("Aperçu : la réponse serait refusée (voir les erreurs).") : t("Aperçu : la réponse serait acceptée. Rien n'a été enregistré."));
       return;
     }
     if (intent === "submit" && client.hasBlockingErrors) {
@@ -72,11 +74,11 @@ export function SubmissionForm({ fields, rules, initialValues = {}, mode, allowD
       const r = await onSave!(intent, values);
       setServerResult(r);
       if (r.ok) {
-        toast("success", r.message ?? "Enregistré.");
+        toast("success", t.msg(r.message ?? "Enregistré."));
         if (r.redirectTo) router.push(r.redirectTo);
       } else {
         setShowAll(true);
-        toast("danger", r.message);
+        toast("danger", t.msg(r.message));
         setTimeout(() => summaryRef.current?.focus(), 50);
       }
     });
@@ -96,28 +98,28 @@ export function SubmissionForm({ fields, rules, initialValues = {}, mode, allowD
     >
       <div ref={summaryRef} tabIndex={-1} className="space-y-3 outline-none">
         {serverResult && !serverResult.ok && (
-          <Alert tone="danger" title={serverResult.message}>
+          <Alert tone="danger" title={t.msg(serverResult.message)}>
             {serverResult.issues && serverResult.issues.filter((i) => i.severity === "ERREUR").length > 0 && (
-              <ul className="list-disc space-y-0.5 pl-4">
-                {serverResult.issues.filter((i) => i.severity === "ERREUR").map((i, n) => <li key={n}>{i.message}</li>)}
+              <ul className="list-disc space-y-0.5 ps-4">
+                {serverResult.issues.filter((i) => i.severity === "ERREUR").map((i, n) => <li key={n}>{t.msg(i.message)}</li>)}
               </ul>
             )}
           </Alert>
         )}
         {showAll && blocking.length > 0 && !(serverResult && !serverResult.ok) && (
-          <Alert tone="danger" title={`${blocking.length} erreur${blocking.length > 1 ? "s" : ""} à corriger avant de soumettre`}>
-            <ul className="list-disc space-y-0.5 pl-4">
+          <Alert tone="danger" title={t("{n} erreur(s) à corriger avant de soumettre", { n: blocking.length })}>
+            <ul className="list-disc space-y-0.5 ps-4">
               {blocking.map((i, n) => (
                 <li key={n}>
-                  {i.fieldKey ? <a href={`#champ-${i.fieldKey}`} className="underline">{i.message}</a> : i.message}
+                  {i.fieldKey ? <a href={`#champ-${i.fieldKey}`} className="underline">{t.msg(i.message)}</a> : t.msg(i.message)}
                 </li>
               ))}
             </ul>
           </Alert>
         )}
         {showAll && warnings.length > 0 && (
-          <Alert tone="warning" title="Points à vérifier (non bloquants)">
-            <ul className="list-disc space-y-0.5 pl-4">{warnings.map((i, n) => <li key={n}>{i.message}</li>)}</ul>
+          <Alert tone="warning" title={t("Points à vérifier (non bloquants)")}>
+            <ul className="list-disc space-y-0.5 ps-4">{warnings.map((i, n) => <li key={n}>{t.msg(i.message)}</li>)}</ul>
           </Alert>
         )}
       </div>
@@ -125,8 +127,8 @@ export function SubmissionForm({ fields, rules, initialValues = {}, mode, allowD
       {fields.map((f, idx) => {
         const issues = visibleIssues(f.key);
         const srvMsgs = serverErrors[f.key] ?? [];
-        const errMsgs = [...new Set([...issues.filter((i) => i.severity === "ERREUR").map((i) => i.message), ...srvMsgs])];
-        const warnMsgs = issues.filter((i) => i.severity === "AVERTISSEMENT").map((i) => i.message);
+        const errMsgs = [...new Set([...issues.filter((i) => i.severity === "ERREUR").map((i) => i.message), ...srvMsgs])].map(t.msg);
+        const warnMsgs = issues.filter((i) => i.severity === "AVERTISSEMENT").map((i) => t.msg(i.message));
         const invalid = errMsgs.length > 0;
         const id = `champ-${f.key}`;
         const describedBy = [f.helpText ? `${id}-aide` : "", invalid ? `${id}-err` : "", warnMsgs.length ? `${id}-warn` : ""].filter(Boolean).join(" ") || undefined;
@@ -138,13 +140,13 @@ export function SubmissionForm({ fields, rules, initialValues = {}, mode, allowD
             {["CHOIX_UNIQUE", "CHOIX_MULTIPLE", "OUI_NON"].includes(f.type) ? (
               <fieldset aria-describedby={describedBy} aria-invalid={invalid} id={id} tabIndex={-1} onBlur={() => touchLater(f.key)}>
                 <legend className="mb-1 block text-sm font-medium text-ink">
-                  <span className="mr-1 text-muted">{idx + 1}.</span>{f.label}
-                  {f.required && <span className="ml-0.5 text-red-700" aria-hidden> *</span>}
-                  {f.required && <span className="sr-only"> (obligatoire)</span>}
+                  <span className="me-1 text-muted">{idx + 1}.</span>{f.label}
+                  {f.required && <span className="ms-0.5 text-red-700" aria-hidden> *</span>}
+                  {f.required && <span className="sr-only"> {t("(obligatoire)")}</span>}
                 </legend>
                 {f.helpText && <p id={`${id}-aide`} className="mb-2 text-xs text-muted">{f.helpText}</p>}
                 <div className={cn("flex flex-wrap gap-2", f.type === "CHOIX_MULTIPLE" && "flex-col sm:flex-row")}>
-                  {(f.type === "OUI_NON" ? [{ value: "oui", label: "Oui" }, { value: "non", label: "Non" }] : f.options ?? []).map((o) => {
+                  {(f.type === "OUI_NON" ? [{ value: "oui", label: t("Oui") }, { value: "non", label: t("Non") }] : f.options ?? []).map((o) => {
                     const checked = f.type === "CHOIX_MULTIPLE" ? Array.isArray(v) && v.includes(o.value) : v === o.value;
                     return (
                       <label key={o.value} className={cn("flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm", checked ? "border-primary-500 bg-primary-50" : "border-line bg-white hover:bg-surface", invalid && "border-red-300")}>
@@ -166,17 +168,17 @@ export function SubmissionForm({ fields, rules, initialValues = {}, mode, allowD
                     );
                   })}
                   {f.type !== "CHOIX_MULTIPLE" && !f.required && v && (
-                    <button type="button" className="text-xs text-primary-700 underline" onClick={() => set(f.key, "")}>Effacer</button>
+                    <button type="button" className="text-xs text-primary-700 underline" onClick={() => set(f.key, "")}>{t("Effacer")}</button>
                   )}
                 </div>
               </fieldset>
             ) : (
               <>
-                <Label htmlFor={id} required={f.required}><span className="mr-1 text-muted">{idx + 1}.</span>{f.label}</Label>
+                <Label htmlFor={id} required={f.required} requiredText={t("(obligatoire)")}><span className="me-1 text-muted">{idx + 1}.</span>{f.label}</Label>
                 {f.helpText && <p id={`${id}-aide`} className="mb-1.5 text-xs text-muted">{f.helpText}</p>}
                 {f.type === "LISTE" ? (
                   <select {...common} value={String(v ?? "")} onChange={(e) => { touch(f.key); set(f.key, e.target.value); }} className={inputClass}>
-                    <option value="">— Sélectionner —</option>
+                    <option value="">{t("— Sélectionner —")}</option>
                     {(f.options ?? []).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                   </select>
                 ) : f.type === "DATE" ? (
@@ -190,7 +192,7 @@ export function SubmissionForm({ fields, rules, initialValues = {}, mode, allowD
                 )}
                 {f.type === "NOMBRE" && (f.validation?.min !== undefined || f.validation?.max !== undefined) && (
                   <p className="mt-1 text-xs text-muted">
-                    Valeur attendue{f.validation?.min !== undefined ? ` ≥ ${f.validation.min}` : ""}{f.validation?.max !== undefined ? ` et ≤ ${f.validation.max}` : ""}{f.validation?.integer ? " (nombre entier)" : ""}.
+                    {t("Valeur attendue")}{f.validation?.min !== undefined ? ` ≥ ${f.validation.min}` : ""}{f.validation?.max !== undefined ? ` ${t("et")} ≤ ${f.validation.max}` : ""}{f.validation?.integer ? ` ${t("(nombre entier)")}` : ""}.
                   </p>
                 )}
               </>
@@ -218,13 +220,13 @@ export function SubmissionForm({ fields, rules, initialValues = {}, mode, allowD
           if ((e.target as HTMLElement).closest("button")) e.preventDefault();
         }}
       >
-        <Button type="submit" disabled={pending}>{pending ? "Envoi…" : mode === "preview" ? "Tester la validation" : submitLabel}</Button>
+        <Button type="submit" disabled={pending}>{pending ? t("Envoi…") : mode === "preview" ? t("Tester la validation") : submitLabel === "Soumettre" ? t("Soumettre") : submitLabel}</Button>
         {allowDraft && mode === "entry" && (
-          <Button type="button" variant="secondary" disabled={pending} onClick={() => save("draft")}>Enregistrer le brouillon</Button>
+          <Button type="button" variant="secondary" disabled={pending} onClick={() => save("draft")}>{t("Enregistrer le brouillon")}</Button>
         )}
         <span className="text-xs text-muted">
-          Complétude : <strong className="tabular-nums">{client.completeness} %</strong>
-          {blocking.length > 0 && <> · {blocking.length} point(s) à compléter ou corriger</>}
+          {t("Complétude :")} <strong className="tabular-nums">{client.completeness} %</strong>
+          {blocking.length > 0 && <> · {t("{n} point(s) à compléter ou corriger", { n: blocking.length })}</>}
         </span>
       </div>
     </form>
