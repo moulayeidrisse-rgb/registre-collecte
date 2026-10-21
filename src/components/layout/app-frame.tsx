@@ -36,7 +36,7 @@ export function NavList({ items }: { items: { href: string; label: string; icon:
               aria-current={active ? "page" : undefined}
               className={cn(
                 "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                active ? "bg-white/15 text-white" : "text-primary-100 hover:bg-white/10 hover:text-white",
+                active ? "bg-white/15 text-white shadow-[inset_3px_0_0_var(--color-gold-400)]" : "text-primary-100 hover:bg-white/10 hover:text-white",
               )}
             >
               <Icon className="h-4 w-4 shrink-0" aria-hidden />
@@ -74,8 +74,9 @@ export function AppFrame({ nav, userMenu, children }: Props) {
 
   const sidebar = (
     <nav aria-label="Navigation principale" className="flex h-full flex-col">
-      <div className="flex h-16 items-center gap-2.5 border-b border-white/10 px-5">
-        <ClipboardList className="h-6 w-6 text-primary-200" aria-hidden />
+      <div className="h-1.5 shrink-0 bg-flag-red" aria-hidden />
+      <div className="flex h-[58px] items-center gap-2.5 border-b border-white/10 px-5">
+        <ClipboardList className="h-6 w-6 text-gold-400" aria-hidden />
         <div className="leading-tight">
           <p className="text-sm font-semibold text-white">Registre Collecte</p>
           <p className="text-[11px] text-primary-200">Prototype de démonstration</p>
@@ -86,6 +87,7 @@ export function AppFrame({ nav, userMenu, children }: Props) {
       <p className="border-t border-white/10 px-5 py-3 text-[11px] leading-snug text-primary-200">
         Données fictives — prototype non contractuel
       </p>
+      <div className="h-1.5 shrink-0 bg-flag-red" aria-hidden />
     </nav>
   );
 
@@ -107,7 +109,7 @@ export function AppFrame({ nav, userMenu, children }: Props) {
           </div>
         )}
 
-        <header className="no-print sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-line bg-white/95 px-4 backdrop-blur sm:px-6">
+        <header className="no-print sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-line border-t-4 border-t-flag-red bg-white/95 px-4 backdrop-blur sm:px-6">
           <button onClick={() => setOpen(true)} className="rounded-md p-2 text-ink hover:bg-surface lg:hidden" aria-label="Ouvrir le menu" aria-expanded={open}>
             <Menu className="h-5 w-5" />
           </button>

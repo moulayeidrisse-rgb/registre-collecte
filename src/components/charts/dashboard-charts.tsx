@@ -5,7 +5,7 @@ import {
 } from "recharts";
 
 // Palette catégorielle validée (ordre fixe, jamais recyclé) — voir README, section Graphiques
-export const SERIES = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100"] as const;
+export const SERIES = ["#00874a", "#d99a00", "#2a78d6", "#c8102e"] as const;
 const GRID = "#e6e9ef";
 const AXIS = "#5b6475";
 
@@ -48,7 +48,7 @@ export function PerFormChart({ data }: { data: { code: string; title: string; va
           <Tooltip
             labelFormatter={(_, p) => (p?.[0]?.payload as { title?: string } | undefined)?.title ?? ""}
             contentStyle={{ borderRadius: 8, borderColor: GRID, fontSize: 13 }}
-            cursor={{ fill: "rgba(47,95,167,0.06)" }}
+            cursor={{ fill: "rgba(0,111,60,0.06)" }}
           />
           <Legend wrapperStyle={{ fontSize: 13 }} itemSorter={null} />
           {/* liseré blanc de 2 px entre segments empilés */}

@@ -43,6 +43,14 @@ Le scénario de démonstration pas à pas est dans [`docs/SCENARIO_DEMO.md`](doc
 | **Consultation et export** | Recherche plein texte (référence, agent, valeurs), filtres par formulaire, statut, période et anomalies ; détail avec historique ; validation / rejet / renvoi pour correction ; export CSV filtré et restreint aux droits ; rapports par formulaire (statistiques par question, imprimables). |
 | **Journal d'audit** | Connexions (réussies, échouées, bloquées), déconnexions, gestion des utilisateurs et formulaires, changements de statut, exports, accès refusés. |
 
+### Identité visuelle
+
+Couleurs inspirées du drapeau mauritanien : vert (`#006f3c` à `#00a95c`) pour la navigation et les
+actions, or (`#ffc400`) pour les repères (icône, page active), rouge (`#d01c1f`) en bandeaux.
+Les contrastes de texte respectent le ratio WCAG AA (≥ 4,5:1). La palette des graphiques
+(vert, or, bleu, rouge) a été vérifiée pour la lisibilité par les personnes daltoniennes ;
+chaque graphique est doublé d'un tableau de données. Jetons définis dans `src/app/globals.css`.
+
 ## 2. Pile technique et versions
 
 Versions **figées** (`npm i -E`) et vérifiées au démarrage du projet :

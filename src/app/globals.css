@@ -3,14 +3,19 @@
 /* Identité visuelle sobre, de type institutionnel */
 @theme {
   --font-sans: "Marianne", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
-  --color-primary-50: #eef3fb;
-  --color-primary-100: #d9e4f5;
-  --color-primary-200: #b3c8ea;
-  --color-primary-500: #2f5fa7;
-  --color-primary-600: #23498a;
-  --color-primary-700: #1b3a6f;
-  --color-primary-800: #142c55;
-  --color-primary-900: #0e1f3d;
+  /* Palette inspirée du drapeau mauritanien : vert, or, rouge */
+  --color-primary-50: #e8f6ee;
+  --color-primary-100: #c8ead6;
+  --color-primary-200: #95d4ae;
+  --color-primary-500: #00a95c; /* vert du drapeau */
+  --color-primary-600: #008a4b;
+  --color-primary-700: #006f3c;
+  --color-primary-800: #005a31;
+  --color-primary-900: #003d22;
+  --color-gold-300: #ffd84d;
+  --color-gold-400: #ffc400; /* or du drapeau (croissant et étoile) */
+  --color-gold-500: #d99a00;
+  --color-flag-red: #d01c1f; /* rouge du drapeau */
   --color-ink: #1e2430;
   --color-muted: #5b6475;
   --color-line: #dde2ea;

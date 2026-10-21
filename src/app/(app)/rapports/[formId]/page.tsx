@@ -63,7 +63,7 @@ export default async function FormReportPage({ params, searchParams }: PageProps
                   {s.distribution.map((d) => (
                     <li key={d.label}>
                       <div className="flex justify-between gap-2"><span>{d.label}</span><span className="tabular-nums text-muted">{d.count} · {formatPercent(d.percent)}</span></div>
-                      <div className="mt-1 h-2 rounded-full bg-surface" aria-hidden><div className="h-2 rounded-full bg-primary-500" style={{ width: `${Math.min(100, d.percent)}%` }} /></div>
+                      <div className="mt-1 h-2 rounded-full bg-surface" aria-hidden><div className="h-2 rounded-full bg-primary-600" style={{ width: `${Math.min(100, d.percent)}%` }} /></div>
                     </li>
                   ))}
                 </ul>

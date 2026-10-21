@@ -81,7 +81,7 @@ export function PageHeader({ title, description, actions, breadcrumb }: { title:
 type Tone = "neutral" | "info" | "warning" | "success" | "danger";
 const tones: Record<Tone, string> = {
   neutral: "bg-slate-100 text-slate-700 ring-slate-200",
-  info: "bg-primary-50 text-primary-700 ring-primary-100",
+  info: "bg-sky-50 text-sky-800 ring-sky-200",
   warning: "bg-amber-50 text-amber-800 ring-amber-200",
   success: "bg-emerald-50 text-emerald-800 ring-emerald-200",
   danger: "bg-red-50 text-red-800 ring-red-200",
@@ -93,7 +93,7 @@ export function Badge({ tone = "neutral", children, className }: { tone?: Tone; 
 
 const alertIcons = { info: Info, success: CheckCircle2, warning: AlertTriangle, danger: XCircle };
 const alertTones = {
-  info: "border-primary-200 bg-primary-50 text-primary-900",
+  info: "border-sky-200 bg-sky-50 text-sky-900",
   success: "border-emerald-200 bg-emerald-50 text-emerald-900",
   warning: "border-amber-200 bg-amber-50 text-amber-900",
   danger: "border-red-200 bg-red-50 text-red-900",
@@ -125,7 +125,7 @@ export function EmptyState({ title, description, action, icon, level = 2 }: { ti
 }
 
 export function StatCard({ label, value, hint, tone = "neutral", icon }: { label: string; value: ReactNode; hint?: ReactNode; tone?: Tone; icon?: ReactNode }) {
-  const accent = { neutral: "text-primary-700", info: "text-primary-600", warning: "text-amber-700", success: "text-emerald-700", danger: "text-red-700" }[tone];
+  const accent = { neutral: "text-primary-700", info: "text-sky-700", warning: "text-amber-700", success: "text-emerald-700", danger: "text-red-700" }[tone];
   return (
     <Card className="p-4">
       <div className="flex items-start justify-between gap-2">
