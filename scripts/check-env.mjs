@@ -1,5 +1,9 @@
 // Vérifie la configuration avant la mise en ligne (message explicite plutôt qu'une erreur technique)
-const url = process.env.DIRECT_URL || process.env.DATABASE_URL;
+const url = process.env.DIRECT_URL || process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL;
+if (url && !process.env.DATABASE_URL) {
+  console.error("\n✖ DATABASE_URL est absente (seule une connexion directe est définie). Ajoutez DATABASE_URL.\n");
+  process.exit(1);
+}
 if (!url) {
   console.error("\n✖ La variable d'environnement DATABASE_URL est absente.");
   console.error("  Vercel : Settings → Environment Variables → ajoutez DATABASE_URL (chaîne de connexion Neon),");
