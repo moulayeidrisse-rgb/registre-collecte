@@ -1,0 +1,16 @@
+# Base PostgreSQL locale pour le développement (optionnelle si PostgreSQL est déjà installé).
+# Usage : docker compose up -d
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: registre
+      POSTGRES_PASSWORD: registre_dev_pwd   # à changer hors démonstration
+      POSTGRES_DB: registre_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - registre_pgdata:/var/lib/postgresql/data
+volumes:
+  registre_pgdata:

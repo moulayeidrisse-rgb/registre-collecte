@@ -1,0 +1,303 @@
+// Schéma de données — Registre Collecte (MVP de démonstration)
+// Toutes les données stockées dans cette base pour la démonstration sont fictives.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ───────────────────────────── Utilisateurs, rôles, sessions ─────────────────────────────
+
+/// Rôles applicatifs. Les permissions associées sont définies dans src/server/auth/permissions.ts
+enum Role {
+  ADMIN
+  SUPERVISEUR
+  AGENT
+}
+
+model User {
+  id                 String    @id @default(cuid())
+  email              String    @unique
+  name               String
+  passwordHash       String
+  role               Role
+  isActive           Boolean   @default(true)
+  mustChangePassword Boolean   @default(false)
+  lastLoginAt        DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  sessions           Session[]
+  assignments        FormAssignment[]
+  formsCreated       Form[]           @relation("FormCreatedBy")
+  submissions        Submission[]     @relation("SubmissionAgent")
+  reviews            Submission[]     @relation("SubmissionReviewer")
+  auditLogs          AuditLog[]
+
+  @@index([role, isActive])
+}
+
+model Session {
+  id         String   @id @default(cuid())
+  /// SHA-256 du jeton de session ; le jeton en clair n'existe que dans le cookie du navigateur
+  tokenHash  String   @unique
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  ipAddress  String?
+  userAgent  String?
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+/// Historique des tentatives de connexion (limitation des essais)
+model LoginAttempt {
+  id        String   @id @default(cuid())
+  email     String
+  ipAddress String?
+  success   Boolean
+  createdAt DateTime @default(now())
+
+  @@index([email, createdAt])
+  @@index([ipAddress, createdAt])
+}
+
+// ───────────────────────────── Formulaires ─────────────────────────────
+
+enum FormStatus {
+  BROUILLON
+  PUBLIE
+  DESACTIVE
+}
+
+enum FormVersionStatus {
+  BROUILLON
+  PUBLIEE
+  ARCHIVEE
+}
+
+enum FieldType {
+  TEXTE
+  NOMBRE
+  DATE
+  LISTE
+  CHOIX_UNIQUE
+  CHOIX_MULTIPLE
+  OUI_NON
+}
+
+enum RuleSeverity {
+  ERREUR        // bloque la soumission
+  AVERTISSEMENT // signalé au superviseur, ne bloque pas
+}
+
+model Form {
+  id                 String        @id @default(cuid())
+  /// Code court lisible, unique (ex. ENQ-MEN-01)
+  code               String        @unique
+  title              String
+  description        String?
+  status             FormStatus    @default(BROUILLON)
+  /// Clés de champs utilisées pour détecter les doublons (vide = détection désactivée)
+  duplicateFieldKeys String[]      @default([])
+  createdById        String
+  createdBy          User          @relation("FormCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  versions           FormVersion[]
+  assignments        FormAssignment[]
+
+  @@index([status])
+}
+
+/// Version d'un formulaire. Une version publiée est figée : les réponses y sont rattachées.
+model FormVersion {
+  id          String            @id @default(cuid())
+  formId      String
+  form        Form              @relation(fields: [formId], references: [id], onDelete: Cascade)
+  number      Int
+  status      FormVersionStatus @default(BROUILLON)
+  publishedAt DateTime?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  fields      FormField[]
+  rules       FormRule[]
+  submissions Submission[]
+
+  @@unique([formId, number])
+  @@index([formId, status])
+}
+
+model FormField {
+  id          String      @id @default(cuid())
+  versionId   String
+  version     FormVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  /// Identifiant technique stable entre versions (ex. age_chef_menage)
+  key         String
+  label       String
+  helpText    String?
+  type        FieldType
+  required    Boolean     @default(false)
+  order       Int
+  /// Options pour LISTE / CHOIX_UNIQUE / CHOIX_MULTIPLE : [{ value, label }]
+  options     Json?
+  /// Règles de validation selon le type (voir src/lib/validation/types.ts)
+  validation  Json?
+
+  values      SubmissionValue[]
+  issues      QualityIssue[]
+
+  @@unique([versionId, key])
+  @@index([versionId, order])
+}
+
+/// Règle de cohérence entre champs (comparaison, obligatoire si…)
+model FormRule {
+  id         String       @id @default(cuid())
+  versionId  String
+  version    FormVersion  @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  /// Définition JSON validée par Zod (voir src/lib/validation/types.ts)
+  definition Json
+  message    String
+  severity   RuleSeverity @default(ERREUR)
+  order      Int          @default(0)
+
+  @@index([versionId])
+}
+
+/// Périmètre : formulaires accessibles à un agent ou suivis par un superviseur
+model FormAssignment {
+  id        String   @id @default(cuid())
+  formId    String
+  form      Form     @relation(fields: [formId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([formId, userId])
+  @@index([userId])
+}
+
+// ───────────────────────────── Réponses ─────────────────────────────
+
+enum SubmissionStatus {
+  BROUILLON
+  SOUMISE
+  A_CORRIGER
+  VALIDEE
+  REJETEE
+}
+
+model Submission {
+  id            String           @id @default(cuid())
+  /// Référence lisible (ex. R-2026-000123)
+  reference     String           @unique
+  versionId     String
+  version       FormVersion      @relation(fields: [versionId], references: [id], onDelete: Restrict)
+  /// Dénormalisé pour les filtres et index (= version.formId)
+  formId        String
+  agentId       String
+  agent         User             @relation("SubmissionAgent", fields: [agentId], references: [id], onDelete: Restrict)
+  status        SubmissionStatus @default(BROUILLON)
+  /// Taux de complétude en pourcentage (0–100), recalculé à chaque enregistrement
+  completeness  Int              @default(0)
+  /// Empreinte normalisée des champs de dédoublonnage (null si non applicable)
+  duplicateKey  String?
+  submittedAt   DateTime?
+  reviewedById  String?
+  reviewedBy    User?            @relation("SubmissionReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewedAt    DateTime?
+  reviewComment String?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  values        SubmissionValue[]
+  issues        QualityIssue[]
+
+  @@index([formId, status])
+  @@index([agentId, status])
+  @@index([status])
+  @@index([submittedAt])
+  @@index([createdAt])
+  @@index([formId, duplicateKey])
+}
+
+/// Valeur typée d'une réponse pour un champ (une seule colonne renseignée selon le type)
+model SubmissionValue {
+  id           String     @id @default(cuid())
+  submissionId String
+  submission   Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  fieldId      String
+  field        FormField  @relation(fields: [fieldId], references: [id], onDelete: Restrict)
+  valueText    String?
+  valueNumber  Decimal?   @db.Decimal(18, 4)
+  valueDate    DateTime?  @db.Date
+  valueBool    Boolean?
+  /// Choix multiple : tableau de valeurs
+  valueJson    Json?
+
+  @@unique([submissionId, fieldId])
+  @@index([fieldId])
+}
+
+// ───────────────────────────── Qualité ─────────────────────────────
+
+enum IssueType {
+  MANQUANT
+  HORS_PLAGE
+  FORMAT
+  DOUBLON
+  INCOHERENCE
+}
+
+enum IssueSeverity {
+  ERREUR
+  AVERTISSEMENT
+}
+
+/// Anomalie détectée sur une réponse. Recalculée à chaque enregistrement de la réponse.
+model QualityIssue {
+  id           String        @id @default(cuid())
+  submissionId String
+  submission   Submission    @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  fieldId      String?
+  field        FormField?    @relation(fields: [fieldId], references: [id], onDelete: SetNull)
+  type         IssueType
+  severity     IssueSeverity
+  message      String
+  /// Pour les doublons : référence de la réponse en double
+  relatedSubmissionId String?
+  createdAt    DateTime      @default(now())
+
+  @@index([submissionId])
+  @@index([type, severity])
+}
+
+// ───────────────────────────── Audit ─────────────────────────────
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  actor      User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  /// Ex. auth.login, form.publish, submission.validate, export.csv
+  action     String
+  entityType String?
+  entityId   String?
+  /// Détails non sensibles (jamais de mot de passe ni de jeton)
+  metadata   Json?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([actorId, createdAt])
+  @@index([action, createdAt])
+  @@index([createdAt])
+}
